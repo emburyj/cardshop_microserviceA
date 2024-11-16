@@ -1,7 +1,6 @@
 import zmq
 import csv
 import os
-import time
 
 class WishlistService:
     '''Wishlist Service class represents an object for manipulating wishlist data
@@ -57,6 +56,7 @@ class WishlistService:
         for i, item in enumerate(current_list):
             wishlist_string += f"{i + 1}. {item[0]} - {item[2]} {item[1]} - ${float(item[3]):.2f}\n\n"
 
+        print("Sending current wishlist to client")
         return wishlist_string
 
     def remove_from_wishlist(self, card_data):
@@ -77,6 +77,7 @@ class WishlistService:
         if ritem:
             response = "The following card has been removed from wishlist:\n"
             response += f"{ritem[0]} - {ritem[1]} {ritem[2]} - ${float(ritem[3]):.2f}\n"
+            print(response)
             return response
 
         return "The card you are trying do delete is not in the wishlist"
