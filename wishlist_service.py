@@ -3,9 +3,10 @@ import csv
 import os
 import time
 
-
-
 class WishlistService:
+    '''Wishlist Service class represents an object for manipulating wishlist data
+    contained in a .csv file.
+    '''
     def __init__(self, file_name="wishlist.csv"):
         self.file_name = file_name
         self.context = zmq.Context()
@@ -14,15 +15,15 @@ class WishlistService:
         self.initialize_wishlist()
 
     def initialize_wishlist(self):
+        '''Method to create wishlist.csv file if it doesn't already exist'''
         if not os.path.exists(self.file_name):
             with open(self.file_name, 'w', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow(['Name', 'Set', 'Year', 'Value'])  # Header for wishlist
 
     def add_card_to_wishlist(self, card_data):
+        '''Method to add a line, containing card data, to the wishlist file.'''
         print("Processing request to add card to wishlist...")
-        time.sleep(2)  # Add a 2-second delay to simulate processing times
-
         with open(self.file_name, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(card_data)
@@ -54,7 +55,6 @@ class WishlistService:
 
         wishlist_string = f"Here is your current wishlist:\n\n"
         for i, item in enumerate(current_list):
-            print(f"This is your current item:{item}\n")
             wishlist_string += f"{i + 1}. {item[0]} - {item[2]} {item[1]} - ${float(item[3]):.2f}\n\n"
 
         return wishlist_string
@@ -62,7 +62,7 @@ class WishlistService:
     def remove_from_wishlist(self, card_data):
         '''This method removes a card from the wishlist
         :param card_data: Object of type List containing data of card to remove.
-        :return: Void
+        :return: String to indicate if/what was removed from wishlist.
         '''
         current_list = self.get_current_wishlist()
         ritem = None
@@ -70,7 +70,6 @@ class WishlistService:
             file.write("Name, Set, Year, Value\n")
             for item in current_list:
                 item = [param.strip() for param in item]
-                print(f"Checking if item is card to delete:\nitem: {item}\ncard_data:{card_data}\n")
                 if item == card_data:
                     ritem = item
                 else:
@@ -106,20 +105,12 @@ class WishlistService:
             elif message['command'] == 'add':
                 card_data = [message['name'], message['set_name'], message['year'], message['value']]
                 self.add_card_to_wishlist(card_data)
-                self.socket.send_string("Card added to wishlist successfully!")
+                self.socket.send_json({'message': "Card added to wishlist successfully!"})
 
             elif message['command'] == 'remove':
                 card_data = [message['name'], message['set_name'], message['year'], str(message['value'])]
-                print(f"Trying to delete this card:\n{card_data}")
                 response = self.remove_from_wishlist(card_data)
-                self.socket.send_string(response)
-
-'''
-todo:
-- edit functionality
-- update display format
-- two decimal places
-'''
+                self.socket.send_json({'message': response})
 
 if __name__ == "__main__":
     service = WishlistService()

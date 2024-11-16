@@ -13,6 +13,7 @@ print(title)
 print("+------------------------------------------------------------+")
 
 class Card:
+    '''Class to represent a card object'''
     def __init__(self, name, set_name, year, value):
         self.name = name
         self.set_name = set_name
@@ -23,25 +24,18 @@ class Card:
         return f"{self.name} - {self.year} {self.set_name} - ${self.value:.2f}"
 
 class Collection:
+    '''Class to represent a collection of card objects'''
     def __init__(self):
-        self.cards = []
-        self.wishlist = []
-        # self.load_from_file()
-
-    def add_card(self, card):
-        self.cards.append(card)
-        print(f"\nAdded {card.name} to the collection.")
-        self.save_to_file()
-
-    def view_cards(self):
-        if not self.cards:
-            print("\nThe collection is empty.")
-        else:
-            print("\nYour Trading Card Collection:")
-            for i, card in enumerate(self.cards, 1):
-                print(f"\n{i}. {card}")
+        self.wishlist = [] # list of card objects
 
     def add_card_to_wishlist(self, card):
+        '''This method opens a socket, sends a message to the
+        Wishlist Microservice requesting to add the specified
+        card to the wishlist.
+        Updates the wishlist data member.
+        :return: List of card objects in wishlist
+        '''
+        self.wishlist.append(card)
         wishlist_socket.send_json({
             'command': 'add',
             'name': card.name,
@@ -49,10 +43,17 @@ class Collection:
             'year': card.year,
             'value': card.value
         })
-        message = wishlist_socket.recv_string()
-        print(message)
+        response = wishlist_socket.recv_json() # response is a json object
+        print(response['message'])
 
     def remove_card_from_wishlist(self, card):
+        '''This method opens a socket, sends a message to the
+        Wishlist Microservice requesting to remove the specified
+        card from the wishlist.
+        Then prints if/what card was removed from wishlist.
+        Updates the wishlist data member.
+        :return: List of card objects in wishlist
+        '''
         self.wishlist.remove(card)
         wishlist_socket.send_json({
             'command': 'remove', # added line
@@ -61,8 +62,8 @@ class Collection:
             'year': card.year,
             'value': card.value
         })
-        message = wishlist_socket.recv_string()
-        print(message)
+        response = wishlist_socket.recv_json() # response is a json object
+        print(response['message'])
 
     def display_wishlist(self):
         '''This method opens a socket, sends a message to the
@@ -73,7 +74,10 @@ class Collection:
         wishlist_socket.send_json({
             'command': 'display',
         })
-        response = wishlist_socket.recv_json()
+        response = wishlist_socket.recv_json() # response is json object
+        # response contains:
+        # -'message' string
+        # -'cards' list of dicts representing cards
         print(response['message'])
         wishlist_data = response['cards']
         # update wishlist data member
