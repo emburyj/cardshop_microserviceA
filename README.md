@@ -66,6 +66,7 @@ for card in cards:
     wishlist.append(Card(card['name'], card['set_name'], card['year'], float(card['value'])))
 
 ```
-The example code above builds a list of card objects received from the microservice response.
+The example code above builds a list of card objects received from the microservice response from the display command.
 
 ## UML DIAGRAM
+![UML Diagram](https://github.com/emburyj/cardshop_microserviceA/blob/6b5061a1834703a97ad9601a2fe903ab75c187b0/UML%20Sequence%20Diagram.jpg)
