@@ -30,38 +30,96 @@ class WishlistService:
         print(f"Added card to wishlist: {card_data}")
 
     def get_current_wishlist(self):
-        '''This method retrieves the current wishlist from file and
-        returns a formatted string listing contents'''
+        '''This method returns a List of Lists containing card data in wishlist'''
         with open(self.file_name, 'r') as file:
             current_list = []
             for line in file:
-                current_list.append(line)
+                current_list.append(line.strip())
         if len(current_list) == 1:
-            return "You don't have anything in your wishlist yet!"
+            return []
+        wishlist = []
+        for i in range(1, len(current_list)):
+            line = current_list[i].split(',')
+            line = [item.strip() for item in line] # remove whitespace from items
+            wishlist.append(line)
 
-        wishlist = current_list[1].split(',')
-        return (f"Here is your current wishlist:\n"
-                  f"Card Name: {wishlist[0]}\n"
-                  f"Set Name: {wishlist[1]}\n"
-                  f"Year: {wishlist[2]}\n"
-                  f"Value: ${wishlist[3]}\n"
-                )
+        return wishlist
+
+    def print_current_wishlist(self):
+        '''This method retrieves the current wishlist from file and
+        returns a formatted string listing contents'''
+        current_list = self.get_current_wishlist()
+        if len(current_list) == 0:
+            return "You don't have anything in your wishlist yet!\n"
+
+        wishlist_string = f"Here is your current wishlist:\n\n"
+        for i, item in enumerate(current_list):
+            print(f"This is your current item:{item}\n")
+            wishlist_string += f"{i + 1}. {item[0]} - {item[2]} {item[1]} - ${float(item[3]):.2f}\n\n"
+
+        return wishlist_string
+
+    def remove_from_wishlist(self, card_data):
+        '''This method removes a card from the wishlist
+        :param card_data: Object of type List containing data of card to remove.
+        :return: Void
+        '''
+        current_list = self.get_current_wishlist()
+        ritem = None
+        with open(self.file_name, 'w') as file:
+            file.write("Name, Set, Year, Value\n")
+            for item in current_list:
+                item = [param.strip() for param in item]
+                print(f"Checking if item is card to delete:\nitem: {item}\ncard_data:{card_data}\n")
+                if item == card_data:
+                    ritem = item
+                else:
+                    file.write(f"{item[0]}, {item[1]}, {item[2]}, {item[3]}\n")
+        if ritem:
+            response = "The following card has been removed from wishlist:\n"
+            response += f"{ritem[0]} - {ritem[1]} {ritem[2]} - ${float(ritem[3]):.2f}\n"
+            return response
+
+        return "The card you are trying do delete is not in the wishlist"
 
     def listen(self):
         print("Wishlist service is listening for requests...")
         while True:
             message = self.socket.recv_json()
             if message['command'] == 'display':
-                response = self.get_current_wishlist()
-                self.socket.send_string(response)
+                response = self.print_current_wishlist()
+                card_data = self.get_current_wishlist()
+                cards = []
+                for card in card_data:
+                    current_card = {}
+                    current_card['name'] = card[0].strip()
+                    current_card['set_name'] = card[1].strip()
+                    current_card['year'] = card[2].strip()
+                    current_card['value'] = card[3].strip()
+                    cards.append(current_card)
+
+                self.socket.send_json({
+                    'message': response,
+                    'cards': cards,
+                    })
 
             elif message['command'] == 'add':
                 card_data = [message['name'], message['set_name'], message['year'], message['value']]
                 self.add_card_to_wishlist(card_data)
                 self.socket.send_string("Card added to wishlist successfully!")
-            # else if message['command'] == 'edit':
-                # do something here
 
+            elif message['command'] == 'remove':
+                card_data = [message['name'], message['set_name'], message['year'], str(message['value'])]
+                print(f"Trying to delete this card:\n{card_data}")
+                response = self.remove_from_wishlist(card_data)
+                self.socket.send_string(response)
+
+'''
+todo:
+- edit functionality
+- update display format
+- two decimal places
+'''
 
 if __name__ == "__main__":
     service = WishlistService()
