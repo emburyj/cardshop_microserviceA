@@ -84,6 +84,19 @@ class Collection:
         self.wishlist = []
         for card in wishlist_data:
             self.wishlist.append(Card(card['name'], card['set_name'], card['year'], float(card['value'])))
+        return wishlist_data
+
+    def edit_wishlist(self, new_data):
+        wishlist_socket.send_json({
+            'command': 'edit',
+            'old_name': new_data[0],
+            'name': new_data[1],
+            'set_name': new_data[2],
+            'year': new_data[3],
+            'value': new_data[4]
+        })
+        response = wishlist_socket.recv_json()
+        print("\n" + response['message'])
 
 def display_menu():
     print()
@@ -93,7 +106,8 @@ def display_menu():
     print("1. Display Current Wishlist")
     print("2. Add Card to Wishlist")
     print("3. Remove Card from Wishlist")
-    print("4. Quit")
+    print("4. Edit Card in Wishlist")
+    print("5. Quit")
 
 
 def main():
@@ -120,6 +134,19 @@ def main():
             collection.remove_card_from_wishlist(collection.wishlist[delete_card - 1])
 
         elif choice == "4":
+            wishlist = collection.display_wishlist()
+            edit_card_choice = int(input("Enter which card number would you like to edit: "))
+            card_to_edit = wishlist[edit_card_choice - 1]
+            print("Enter new values for your selected card (or leave blank to keep)")
+            card_data = []
+            card_data.append(card_to_edit['name'])
+            params = ["Name: ", "Set Name: ", "Year: ", "Value: $"]
+            for item in params:
+                current_input = input(f"Enter New {item}")
+                card_data.append(current_input)
+            collection.edit_wishlist(card_data)
+
+        elif choice == "5":
             print("Goodbye!")
             break
 

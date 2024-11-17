@@ -82,6 +82,32 @@ class WishlistService:
 
         return "The card you are trying do delete is not in the wishlist"
 
+    def edit_wishlist_card(self, card_data):
+        wishlist = self.get_current_wishlist()
+        old_name = card_data[0]
+        new_name = card_data[1]
+        new_set_name = card_data[2]
+        new_year = card_data[3]
+        new_value = card_data[4]
+        for item in wishlist:
+            if item[0] == old_name:
+                if new_name != "":
+                    item[0] = new_name
+                if new_set_name != "":
+                    item[1] = new_set_name
+                if new_year != "":
+                    item[2] = new_year
+                if new_value != "":
+                    item[3] = new_value
+                with open(self.file_name, 'w') as file:
+                    file.write("Name, Set, Year, Value\n")
+                    for line in wishlist:
+                        file.write(f"{line[0]},{line[1]},{line[2]},{line[3]}\n")
+                response = "Edited card in wishlist!"
+                print(response)
+                return response
+        return "Unable to edit the specified card!"
+
     def listen(self):
         print("Wishlist service is listening for requests...")
         while True:
@@ -111,6 +137,11 @@ class WishlistService:
             elif message['command'] == 'remove':
                 card_data = [message['name'], message['set_name'], message['year'], str(message['value'])]
                 response = self.remove_from_wishlist(card_data)
+                self.socket.send_json({'message': response})
+
+            elif message['command'] == 'edit':
+                card_data =[message['old_name'], message['name'], message['set_name'], str(message['year']), str(message['value'])]
+                response = self.edit_wishlist_card(card_data)
                 self.socket.send_json({'message': response})
 
 if __name__ == "__main__":
