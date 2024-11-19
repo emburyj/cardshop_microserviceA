@@ -83,6 +83,11 @@ class WishlistService:
         return "The card you are trying do delete is not in the wishlist"
 
     def edit_wishlist_card(self, card_data):
+        '''This method edits an item from the wishlist.
+        :param card_data: Object of type List containing card data as follows:
+        [old_name, new_name, new_set_name, new_year, new_value]
+        :return: String indicating success/failure of edit.
+        '''
         wishlist = self.get_current_wishlist()
         old_name = card_data[0]
         new_name = card_data[1]
@@ -109,6 +114,7 @@ class WishlistService:
         return "Unable to edit the specified card!"
 
     def listen(self):
+        '''This method is an infinite loop listening for requests from the socket'''
         print("Wishlist service is listening for requests...")
         while True:
             message = self.socket.recv_json()
@@ -145,5 +151,6 @@ class WishlistService:
                 self.socket.send_json({'message': response})
 
 if __name__ == "__main__":
+    '''Initialize service and listener'''
     service = WishlistService()
     service.listen()
